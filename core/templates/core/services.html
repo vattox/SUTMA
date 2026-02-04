@@ -1,0 +1,575 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Full Page Layout */
+    .services-container {
+        display: flex;
+        height: 100vh;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        background: radial-gradient(circle at center, #0a0a12 0%, #000 100%);
+        transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* Diagram Section - Starts Centered */
+    .diagram-section {
+        width: 100%;
+        flex: 0 0 100%;
+        /* Force full width initially */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 10;
+        transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* Active State: Splits screen */
+    .services-container.layout-active .diagram-section {
+        flex: 0 0 50%;
+        width: 50%;
+    }
+
+    /* Rotating Orbit System */
+    .solar-system {
+        position: relative;
+        width: 600px;
+        height: 600px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.8s;
+    }
+
+    .services-container.layout-active .solar-system {
+        transform: scale(0.8);
+        /* Slight shrink when moving to side */
+    }
+
+    .sun {
+        width: 150px;
+        height: 150px;
+        background: rgba(0, 242, 255, 0.1);
+        border: 2px solid var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-family: var(--font-display);
+        color: #fff;
+        font-size: 1.2rem;
+        box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+        z-index: 20;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+        transition: 0.3s;
+        position: relative;
+    }
+
+    /* Particle Burst Effect */
+    .particle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        background: var(--primary);
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Animation for burst */
+    @keyframes particle-burst {
+        0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(var(--tx), var(--ty)) scale(0);
+            opacity: 0;
+        }
+    }
+
+    .orbit-ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transition: 0.5s;
+    }
+
+    .orbit-ring.l1 {
+        width: 350px;
+        height: 350px;
+        animation: rotate-cw 60s linear infinite;
+    }
+
+    .orbit-ring.l2 {
+        width: 550px;
+        height: 550px;
+        animation: rotate-ccw 80s linear infinite;
+    }
+
+    /* Turbo Spin on Click */
+    .services-container.layout-active .orbit-ring.l1 {
+        animation: rotate-cw 5s linear infinite;
+        border-color: rgba(0, 242, 255, 0.3);
+    }
+
+    .services-container.layout-active .orbit-ring.l2 {
+        animation: rotate-ccw 7s linear infinite;
+        border-color: rgba(0, 242, 255, 0.2);
+    }
+
+
+    /* Service Nodes */
+    .planet {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    /* Positioning nodes on the rings - rough calculation for even spacing */
+    /* Ring 1 (Inner) - 3 items */
+    .planet.p1 {
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .planet.p2 {
+        bottom: 15%;
+        left: 05%;
+        transform: translate(-50%, 50%);
+    }
+
+    .planet.p3 {
+        bottom: 15%;
+        right: 05%;
+        transform: translate(50%, 50%);
+    }
+
+    /* Ring 2 (Outer) - 3 items */
+    .planet.p4 {
+        top: 15%;
+        left: 0;
+        transform: translate(-50%, -50%);
+    }
+
+    .planet.p5 {
+        top: 15%;
+        right: 0;
+        transform: translate(50%, -50%);
+    }
+
+    .planet.p6 {
+        bottom: 0;
+        left: 50%;
+        transform: translate(-50%, 50%);
+    }
+
+
+    .planet-node {
+        width: 60px;
+        height: 60px;
+        background: rgba(10, 10, 20, 0.8);
+        border: 1px solid var(--glass-border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 1.2rem;
+        transition: 0.3s;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .planet-label {
+        position: absolute;
+        top: 70px;
+        width: 150px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 4px #000;
+        pointer-events: none;
+        transition: 0.3s;
+    }
+
+    .planet:hover .planet-node,
+    .planet.active .planet-node {
+        background: var(--primary);
+        color: #000;
+        box-shadow: 0 0 30px var(--primary);
+        transform: scale(1.2);
+    }
+
+    .planet:hover .planet-label,
+    .planet.active .planet-label {
+        color: #fff;
+    }
+
+    /* Content Panel - Initially Hidden/Collapsed */
+    .content-section {
+        flex: 0 0 0%;
+        width: 0%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.02);
+        border-left: 1px solid var(--glass-border);
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        overflow: hidden;
+        transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        position: relative;
+    }
+
+    .services-container.layout-active .content-section {
+        flex: 0 0 50%;
+        width: 50%;
+        padding: 50px;
+        opacity: 1;
+    }
+
+    /* Close Button - Hidden on Desktop */
+    .close-btn-mobile {
+        display: none;
+    }
+
+    .service-detail {
+        display: none;
+        width: 100%;
+        max-width: 600px;
+        animation: fade-in-up 0.8s ease forwards 0.3s;
+        /* Delay added so it appears after slide */
+        opacity: 0;
+        /* Important for animation */
+    }
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .service-detail.active {
+        display: block;
+    }
+
+    .service-img-lg {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--glass-border);
+    }
+
+    .service-detail h2 {
+        font-family: var(--font-display);
+        color: var(--primary);
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+
+    .service-desc {
+        color: var(--text-main);
+        line-height: 1.6;
+        font-size: 1.1rem;
+    }
+
+    .service-desc ul {
+        margin-top: 20px;
+        padding-left: 20px;
+    }
+
+    .service-desc li {
+        margin-bottom: 10px;
+        color: var(--text-muted);
+    }
+
+    /* Animations */
+    @keyframes rotate-cw {
+        0% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        100% {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+
+    @keyframes rotate-ccw {
+        0% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        100% {
+            transform: translate(-50%, -50%) rotate(-360deg);
+        }
+    }
+
+    /* Initial Loading State for Entrance Animation */
+    .services-container.services-loading .solar-system {
+        transform: scale(0) rotate(-90deg);
+        opacity: 0;
+    }
+
+    .services-container.services-loading .planet {
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) scale(0) !important;
+        opacity: 0;
+    }
+
+    /* Transition properties */
+    .solar-system {
+        position: relative;
+        width: 600px;
+        height: 600px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 1s ease;
+        /* Pop effect */
+    }
+
+    .planet {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+        /* Swift out easing */
+    }
+
+    /* Staggered delays for planets when emerging */
+    .p1 {
+        transition-delay: 0.1s;
+    }
+
+    .p2 {
+        transition-delay: 0.2s;
+    }
+
+    .p3 {
+        transition-delay: 0.3s;
+    }
+
+    .p4 {
+        transition-delay: 0.4s;
+    }
+
+    .p5 {
+        transition-delay: 0.5s;
+    }
+
+    .p6 {
+        transition-delay: 0.6s;
+    }
+
+    @media (max-width: 900px) {
+        .services-container {
+            flex-direction: column;
+            overflow-y: auto;
+            height: auto;
+            min-height: 100vh;
+        }
+
+        .diagram-section {
+            min-height: 400px;
+            padding: 20px 0;
+        }
+
+        .solar-system {
+            transform: scale(0.6);
+        }
+
+        /* Mobile: Full screen overlay for content */
+        .services-container.layout-active .diagram-section {
+            display: none;
+            /* Hide diagram completely when service is active */
+        }
+
+        .services-container.layout-active .content-section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100vh !important;
+            flex: none;
+            border: none;
+            padding: 60px 20px 20px;
+            overflow-y: auto;
+            background: rgba(3, 3, 5, 0.98);
+            z-index: 1000;
+        }
+
+        /* Enhanced Close Button for Mobile */
+        .close-btn-mobile {
+            position: fixed !important;
+            top: 15px !important;
+            right: 15px !important;
+            background: rgba(0, 242, 255, 0.2) !important;
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid var(--primary) !important;
+            color: var(--primary) !important;
+            font-size: 1.8rem !important;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3) !important;
+            z-index: 1001 !important;
+        }
+
+        .service-img-lg {
+            height: 200px;
+        }
+
+        .service-detail h2 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="services-container services-loading" id="main-container">
+    <!-- Interactive Diagram -->
+    <div class="diagram-section">
+        <div class="solar-system" id="solar-system">
+            <div class="sun">
+                SUTMA<br>SERVICES
+            </div>
+
+            <!-- Ring 1 -->
+            <div class="orbit-ring l1"></div>
+            <!-- Ring 2 -->
+            <div class="orbit-ring l2"></div>
+
+            <!-- Nodes -->
+            {% for s in services %}
+            <div class="planet p{{ forloop.counter }}" onclick="activateLayout('{{ s.id }}', this)">
+                <div class="planet-node">
+                    <i class="fas fa-circle"></i>
+                </div>
+                <div class="planet-label">
+                    {{ s.title }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Details Panel -->
+    <div class="content-section" id="content-panel">
+        <button onclick="resetLayout()" class="close-btn-mobile" aria-label="Close service details">
+            <i class="fas fa-times"></i>
+        </button>
+
+        {% for s in services %}
+        <div id="detail-{{ s.id }}" class="service-detail">
+            {% if s.image|slice:":4" == "http" %}
+            <img src="{{ s.image }}" class="service-img-lg" alt="{{ s.title }}">
+            {% else %}
+            <img src="{% static s.image %}" class="service-img-lg" alt="{{ s.title }}"
+                onerror="this.src='https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'">
+            {% endif %}
+            <h2>{{ s.title }}</h2>
+            <div class="service-desc">
+                {{ s.full_desc|safe }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Trigger Entrance Animation
+        setTimeout(() => {
+            document.getElementById('main-container').classList.remove('services-loading');
+        }, 100);
+    });
+
+    function activateLayout(id, element) {
+        const container = document.getElementById('main-container');
+
+        // 1. Trigger Layout Shift
+        if (!container.classList.contains('layout-active')) {
+            container.classList.add('layout-active');
+            createParticles(); // Burst effect on first activation
+        }
+
+        // 2. Hide all details
+        document.querySelectorAll('.service-detail').forEach(el => el.classList.remove('active'));
+
+        // 3. Show specific detail
+        document.getElementById('detail-' + id).classList.add('active');
+
+        // 4. Update active class on nodes
+        document.querySelectorAll('.planet').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    function resetLayout() {
+        document.getElementById('main-container').classList.remove('layout-active');
+        document.querySelectorAll('.planet').forEach(el => el.classList.remove('active'));
+    }
+
+    function createParticles() {
+        const sun = document.querySelector('.sun');
+        const count = 20;
+
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+
+            // Random direction
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 150 + Math.random() * 200; // Distance
+
+            const tx = Math.cos(angle) * velocity + 'px';
+            const ty = Math.sin(angle) * velocity + 'px';
+
+            p.style.setProperty('--tx', tx);
+            p.style.setProperty('--ty', ty);
+            p.style.animation = `particle-burst 0.8s ease-out forwards`;
+
+            sun.appendChild(p);
+
+            // Cleanup
+            setTimeout(() => { p.remove(); }, 1000);
+        }
+    }
+</script>
+{% endblock %}

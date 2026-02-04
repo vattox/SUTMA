@@ -1,0 +1,414 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero {
+        position: relative;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
+    }
+
+    .hero-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.4;
+        background:
+            linear-gradient(45deg, transparent 48%, var(--primary) 50%, transparent 52%),
+            linear-gradient(-45deg, transparent 48%, var(--secondary) 50%, transparent 52%);
+        background-size: 60px 60px;
+        animation: cyber-grid 20s linear infinite;
+    }
+
+    @keyframes cyber-grid {
+        0% {
+            background-position: 0 0;
+        }
+
+        100% {
+            background-position: 60px 60px;
+        }
+    }
+
+    .hero-content {
+        z-index: 10;
+        text-align: center;
+        padding: 0 20px;
+        backdrop-filter: blur(5px);
+    }
+
+    .hero h1 {
+        font-family: var(--font-display);
+        font-size: 4rem;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        background: linear-gradient(135deg, #fff, var(--primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+    }
+
+    .hero p {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto 40px;
+        letter-spacing: 2px;
+    }
+
+    .btn-glow {
+        display: inline-block;
+        padding: 15px 40px;
+        font-family: var(--font-display);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #000;
+        background: var(--primary);
+        border: none;
+        clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        transition: 0.3s;
+        box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+    }
+
+    .btn-glow:hover {
+        background: #fff;
+        box-shadow: 0 0 40px rgba(0, 242, 255, 0.6);
+        transform: translateY(-5px);
+    }
+
+    /* Sections */
+    section {
+        padding: 100px 5%;
+        position: relative;
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        margin-bottom: 60px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        position: relative;
+        display: inline-block;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--primary);
+        box-shadow: 0 0 10px var(--primary);
+    }
+
+    /* About Cards */
+    .about-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+
+    .about-card {
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary);
+    }
+
+    .about-card h3 {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: var(--primary);
+    }
+
+    /* Services Grid */
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 40px;
+    }
+
+    .service-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 0;
+        transition: 0.4s;
+    }
+
+    .service-item:hover {
+        border-color: var(--primary);
+        transform: translateY(-10px);
+        box-shadow: 0 10px 40px rgba(0, 242, 255, 0.1);
+    }
+
+    .service-img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        opacity: 0.7;
+        transition: 0.4s;
+    }
+
+    .service-item:hover .service-img {
+        opacity: 1;
+    }
+
+    .service-content {
+        padding: 30px;
+    }
+
+    .service-content h3 {
+        font-family: var(--font-display);
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+    }
+
+    .service-list li {
+        margin-bottom: 8px;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        color: var(--text-muted);
+    }
+
+    .service-list li::before {
+        content: '>';
+        color: var(--primary);
+        margin-right: 10px;
+        font-weight: bold;
+    }
+
+    /* Map Section */
+    #map-container {
+        position: relative;
+        height: 600px;
+        width: 100%;
+        margin-top: 100px;
+        border-top: 1px solid var(--glass-border);
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    #map {
+        height: 100%;
+        width: 100%;
+        z-index: 10;
+        filter: grayscale(100%) invert(90%) contrast(120%);
+        /* Custom dark mode filter */
+    }
+
+    .map-overlay {
+        position: absolute;
+        top: 50px;
+        left: 50px;
+        z-index: 20;
+        width: 300px;
+        pointer-events: none;
+        /* Let clicks pass through to map */
+    }
+
+    .map-card {
+        pointer-events: auto;
+        padding: 30px;
+    }
+
+    /* Gallery */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    .gallery-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 4px;
+        transition: 0.3s;
+        filter: grayscale(60%);
+        border: 1px solid transparent;
+    }
+
+    .gallery-img:hover {
+        filter: grayscale(0%);
+        border-color: var(--primary);
+        transform: scale(1.05);
+        z-index: 10;
+    }
+
+    /* Partner Logos */
+    .partner-logo {
+        padding: 20px 40px;
+        font-family: var(--font-display);
+        color: var(--text-muted);
+        border-radius: 4px;
+        transition: 0.3s;
+        min-width: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .partner-logo:hover {
+        background: var(--primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--primary);
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<header class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content" data-scroll>
+        <h1>SUTMA</h1>
+        <p>SUD TECHNIQUE MARJANE SARL , CONSTRUIRE L'AVENIR</p>
+        <a href="{% url 'contact' %}" class="btn-glow">Contactez-Nous</a>
+    </div>
+</header>
+
+<!-- About Section (Migrated Content) -->
+<section id="about">
+    <h2 class="section-title" data-scroll>Entreprise</h2>
+    <div class="about-grid">
+        <div class="about-card glass" data-scroll>
+            <h3>Une histoire née de l'expérience</h3>
+            <p><strong>16 octobre 2008 : SUTMA voit le jour</strong></p>
+            <p style="margin-top: 15px; color: var(--text-muted);">
+                SUTMA est née de l'ambition de deux associés forts de plus de 10 ans d'expérience dans la pêche côtière,
+                hauturière et la marine marchande.
+            </p>
+            <p style="margin-top: 15px; color: var(--text-muted);">
+                Leurs parcours riches leur ont permis de développer une connaissance approfondie du secteur, imposant
+                SUTMA comme un acteur incontournable.
+            </p>
+        </div>
+        <div class="about-card glass" data-scroll>
+            <h3>SUTMA en quelques mots</h3>
+            <ul class="service-list" style="margin-top: 20px;">
+                <li>Entreprise créée en 2008 par des experts passionnés</li>
+                <li>Expertise reconnue dans le domaine maritime et BTP</li>
+                <li>Engagement fort pour la performance et la qualité</li>
+                <li>Entreprise dynamique tournée vers l'avenir</li>
+            </ul>
+            <p style="margin-top: 20px; color: var(--primary); font-weight: bold; font-family: var(--font-display);">
+                "Votre partenaire de confiance."
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Services CTA Section (Replaced detailed grid) -->
+<section id="services"
+    style="background: radial-gradient(circle at center, #050505 0%, #000 100%); text-align: center; padding: 120px 5%;">
+    <div data-scroll>
+        <h2 class="section-title">Nos Domaines d'Expertise</h2>
+        <p style="max-width: 700px; margin: 0 auto 50px; color: var(--text-muted); font-size: 1.2rem;">
+            Découvrez l'ensemble de nos solutions : Location d'engins, BTP, Manutention et Infrastructure
+            Événementielle.
+            Une offre complète adaptée à l'envergure de vos projets.
+        </p>
+
+        <div style="position: relative; display: inline-block;">
+            <div
+                style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, var(--primary) 0%, transparent 60%); opacity: 0.1; animation: pulse 3s infinite;">
+            </div>
+            <a href="{% url 'services' %}" class="btn-glow" style="font-size: 1.5rem; padding: 20px 60px;">
+                Explorer nos Services <i class="fas fa-arrow-right" style="margin-left: 10px;"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Gallery Section -->
+<section id="projects">
+    <h2 class="section-title" data-scroll>Nos Réalisations</h2>
+    <div class="gallery-grid">
+        <!-- Using images copied from legacy folder -->
+        <img src="{% static 'core/images/512cede65aef3abf63d7a4086ecb5a4e_fit.jpg' %}" class="gallery-img"
+            alt="Projet SUTMA">
+        <img src="{% static 'core/images/d82b103c796deaab07992f4128b061a1_1080x608_fit.jpg' %}" class="gallery-img"
+            alt="Projet SUTMA">
+        <img src="{% static 'core/images/d9b7fd67f2c9b572574b263f42fadaa7_1080x810_fit.jpg' %}" class="gallery-img"
+            alt="Projet SUTMA">
+        <img src="{% static 'core/images/2dd5915c9ec4bf4f893645b40ca6f539_792x446_fit.jpg' %}" class="gallery-img"
+            alt="Projet SUTMA">
+        <img src="{% static 'core/images/cd0df0cce139d68392d3b89ae1695123_1386x1040_fit.JPG' %}" class="gallery-img"
+            alt="Projet SUTMA">
+        <img src="{% static 'core/images/6350fbd3bb61cef8c8aef9cd26f67bc8_1080x718_fit.JPG' %}" class="gallery-img"
+            alt="Projet SUTMA">
+    </div>
+
+    <!-- Gallery Button -->
+    <div style="text-align: center; margin-top: 60px;" data-scroll>
+        <a href="{% url 'gallery' %}" class="btn-glow" style="font-size: 1.3rem; padding: 18px 50px;">
+            <i class="fas fa-images" style="margin-right: 10px;"></i>
+            Voir Toute la Galerie
+        </a>
+    </div>
+</section>
+
+<!-- Partners Section -->
+<section id="partners" style="background: linear-gradient(180deg, #020202 0%, #0a0a15 100%); text-align: center;">
+    <h2 class="section-title" data-scroll>Nos Partenaires</h2>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 50px; opacity: 0.8;">
+        <!-- Using text placeholders styled as logos since we don't have logo images yet, 
+             or we can try to use generic placeholders.
+             For "Prestige" look, we will use stylized text boxes if images are missing. -->
+
+        <div class="partner-logo glass" data-scroll>Chambre de Commerce, d'Industrie et de Services d'Agadir (CCISA)
+        </div>
+        <div class="partner-logo glass" data-scroll>Région Souss Massa (RSM)</div>
+        <div class="partner-logo glass" data-scroll>Centre Régional d'Investissement Agadir (CRI)</div>
+        <div class="partner-logo glass" data-scroll>Agence Nationale des Ports (ANP)</div>
+        <div class="partner-logo glass" data-scroll>Office National des Ports (ONP)</div>
+        <div class="partner-logo glass" data-scroll>Marsa Maroc</div>
+        <div class="partner-logo glass" data-scroll>Arep SMD</div>
+        <div class="partner-logo glass" data-scroll>Dar Assalam Rabat</div>
+    </div>
+</section>
+
+<section id="contact-cta" style="text-align: center; padding: 100px 5%; background: var(--bg-dark);">
+    <h2 class="section-title" data-scroll>Prêt à collaborer ?</h2>
+    <div style="max-width: 600px; margin: 0 auto;" data-scroll>
+        <p style="color: var(--text-muted); margin-bottom: 40px; font-size: 1.2rem;">
+            Retrouvez-nous à notre siège social ou contactez-nous directement.
+        </p>
+        <a href="{% url 'contact' %}" class="btn-glow">Voir la Carte & Contact</a>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- No Map JS here anymore -->
+{% endblock %}
